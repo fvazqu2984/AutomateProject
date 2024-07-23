@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QFileDialog, QMessageBox, QInputDialog
 )
 import subprocess
-from openai import OpenAI
+import openai
 
 class CodeAnalyzerApp(QWidget):
     def __init__(self):
@@ -46,7 +46,6 @@ class CodeAnalyzerApp(QWidget):
         self.setLayout(layout)
 
     def get_api_key(self):
-
         # If not set, prompt the user to enter their API key
         if not self.api_key:
             self.api_key, ok = QInputDialog.getText(self, 'OpenAI API Key', 'Enter your OpenAI API key:')
@@ -55,7 +54,7 @@ class CodeAnalyzerApp(QWidget):
                 sys.exit(1)
 
         # Initialize OpenAI client with the provided API key
-        self.client = OpenAI(api_key=self.api_key)
+        openai.api_key = self.api_key
 
     def openFileDialog(self):
         options = QFileDialog.Options()
@@ -176,7 +175,7 @@ class CodeAnalyzerApp(QWidget):
             "*/"
         )
 
-        response = self.client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo-0125",
             messages=[
                 {"role": "system", "content": "You are a helpful coding assistant."},
@@ -184,7 +183,7 @@ class CodeAnalyzerApp(QWidget):
             ]
         )
 
-        response_content = response.choices[0].message.content.strip()
+        response_content = response.choices[0].message['content'].strip()
         return response_content
 
     def detect_and_fix_memory_vulnerabilities(self, source_code, clang_output, asan_output):
@@ -207,7 +206,7 @@ class CodeAnalyzerApp(QWidget):
             "*/"
         )
 
-        response = self.client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo-0125",
             messages=[
                 {"role": "system", "content": "You are a helpful coding assistant."},
@@ -215,7 +214,7 @@ class CodeAnalyzerApp(QWidget):
             ]
         )
 
-        response_content = response.choices[0].message.content.strip()
+        response_content = response.choices[0].message['content'].strip()
         return response_content
 
 if __name__ == '__main__':
