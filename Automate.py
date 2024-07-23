@@ -2,18 +2,18 @@ import sys
 import os
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QTextEdit,
-    QFileDialog, QMessageBox
+    QFileDialog, QMessageBox, QInputDialog
 )
 import subprocess
 from openai import OpenAI
 
-#OpenAI client with API key
-client = OpenAI(api_key="sk-memopauto-X65KqkH8CTidnjSeqUoUT3BlbkFJOdOtL9Npcm1zipAsnx20")
-
 class CodeAnalyzerApp(QWidget):
     def __init__(self):
         super().__init__()
+        self.api_key = None
+        self.client = None
         self.initUI()
+        self.get_api_key()
 
     def initUI(self):
         self.setWindowTitle('Code Analyzer and Optimizer')
@@ -44,6 +44,18 @@ class CodeAnalyzerApp(QWidget):
         layout.addWidget(self.resultText)
 
         self.setLayout(layout)
+
+    def get_api_key(self):
+
+        # If not set, prompt the user to enter their API key
+        if not self.api_key:
+            self.api_key, ok = QInputDialog.getText(self, 'OpenAI API Key', 'Enter your OpenAI API key:')
+            if not ok or not self.api_key:
+                QMessageBox.critical(self, "Error", "OpenAI API key is required to run the application.")
+                sys.exit(1)
+
+        # Initialize OpenAI client with the provided API key
+        self.client = OpenAI(api_key=self.api_key)
 
     def openFileDialog(self):
         options = QFileDialog.Options()
@@ -164,7 +176,7 @@ class CodeAnalyzerApp(QWidget):
             "*/"
         )
 
-        response = client.chat.completions.create(
+        response = self.client.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
                 {"role": "system", "content": "You are a helpful coding assistant."},
@@ -195,7 +207,7 @@ class CodeAnalyzerApp(QWidget):
             "*/"
         )
 
-        response = client.chat.completions.create(
+        response = self.client.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
                 {"role": "system", "content": "You are a helpful coding assistant."},
@@ -206,7 +218,7 @@ class CodeAnalyzerApp(QWidget):
         response_content = response.choices[0].message.content.strip()
         return response_content
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = CodeAnalyzerApp()
     ex.show()
